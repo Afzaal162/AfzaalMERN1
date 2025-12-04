@@ -13,6 +13,7 @@ const OTP = () => {
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
+  // Use env variable for API URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
   useEffect(() => {
@@ -66,11 +67,10 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-  `${API_URL}/auth/verify-otp`, // not /api/auth/verify-otp if API_URL already has /api
-  { email, otp: enteredOtp },
-  { withCredentials: true }
-);
-
+        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // remove trailing slash if exists
+        { email, otp: enteredOtp },
+        { withCredentials: true }
+      );
 
       if (response.data.success) {
         localStorage.setItem("userEmail", email);
@@ -80,8 +80,8 @@ const OTP = () => {
         alert(response.data.message);
       }
     } catch (err) {
-      console.log(err);
-      alert("OTP verification failed. Try again.");
+      console.error("OTP verify error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "OTP verification failed. Try again.");
     }
   };
 
