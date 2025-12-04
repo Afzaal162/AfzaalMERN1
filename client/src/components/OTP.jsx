@@ -66,10 +66,11 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/verify-otp`,
-        { email, otp: enteredOtp },
-        { withCredentials: true }
-      );
+  `${API_URL}/auth/verify-otp`, // not /api/auth/verify-otp if API_URL already has /api
+  { email, otp: enteredOtp },
+  { withCredentials: true }
+);
+
 
       if (response.data.success) {
         localStorage.setItem("userEmail", email);
