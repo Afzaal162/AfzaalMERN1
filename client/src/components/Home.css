@@ -1,0 +1,362 @@
+/* Home.css - Modern Design */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-content {
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logo Styles */
+.home-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 50px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.logo-icon {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.logo-bar {
+  width: 4px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 2px;
+  display: block;
+  animation: barGrow 0.6s ease-out backwards;
+}
+
+.logo-bar:nth-child(1) {
+  height: 16px;
+  animation-delay: 0.1s;
+}
+
+.logo-bar:nth-child(2) {
+  height: 24px;
+  animation-delay: 0.2s;
+}
+
+.logo-bar:nth-child(3) {
+  height: 20px;
+  animation-delay: 0.3s;
+}
+
+@keyframes barGrow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+/* Hero Section */
+.hero-section {
+  margin-bottom: 60px;
+  animation: fadeInUp 0.8s ease-out 0.2s backwards;
+}
+
+.hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.hero-description {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-bottom: 50px;
+  animation: fadeInUp 0.8s ease-out 0.4s backwards;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 30px 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.feature-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: rotate(5deg) scale(1.1);
+}
+
+.feature-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.feature-card p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* CTA Section */
+.cta-section {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  animation: fadeInUp 0.8s ease-out 0.6s backwards;
+}
+
+.cta-link {
+  text-decoration: none;
+}
+
+.btn {
+  padding: 16px 40px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+  justify-content: center;
+}
+
+.primary-btn {
+  background: #ffffff;
+  color: #667eea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.primary-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.primary-btn:hover svg {
+  transform: translateX(4px);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Home Footer */
+.home-footer {
+  animation: fadeIn 0.8s ease-out 0.8s backwards;
+}
+
+.home-footer p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.home-footer strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Decorative Elements */
+.decoration {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  z-index: 1;
+  animation: float 6s ease-in-out infinite;
+}
+
+.decoration-1 {
+  width: 400px;
+  height: 400px;
+  background: #ffd89b;
+  top: -200px;
+  left: -200px;
+}
+
+.decoration-2 {
+  width: 500px;
+  height: 500px;
+  background: #19547b;
+  bottom: -250px;
+  right: -250px;
+  animation-delay: 2s;
+}
+
+.decoration-3 {
+  width: 300px;
+  height: 300px;
+  background: #f093fb;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(20px, 20px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .cta-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .home-logo {
+    padding: 10px 20px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+}
