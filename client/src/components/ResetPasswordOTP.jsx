@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { API_URL } from "./config"; // ✅ Use config.js for backend URL
 // import './OTP.css';
 
 const OTP = () => {
@@ -12,9 +13,6 @@ const OTP = () => {
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
-
-  // Environment variable for API URL
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     if (timer > 0) {
@@ -60,7 +58,6 @@ const OTP = () => {
     else inputsRef.current[5]?.focus();
   };
 
-  // Verify OTP
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
@@ -68,7 +65,7 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // remove trailing slash
+        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // ✅ Use config.js API_URL
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
@@ -86,7 +83,6 @@ const OTP = () => {
     }
   };
 
-  // Resend OTP
   const handleResend = async () => {
     if (!canResend) return;
     try {
