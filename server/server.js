@@ -6,7 +6,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/mongodb.js";
 import authRouter from "./route/authRoutes.js";
-
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
 const app = express();
 
 // Connect Database
@@ -16,11 +16,7 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://mern-auth-frontend.vercel.app" // ✅ Add this
-  ],
+  origin: allowedOrigins,
   credentials: true,
 }));
 
