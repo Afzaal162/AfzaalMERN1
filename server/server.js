@@ -26,13 +26,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// Redirect root "/" to frontend
-app.get("/", (req, res) => {
-  res.redirect("https://afzaal-mern-1-43wc.vercel.app/"); // Your frontend URL
-});
-
-// API Routes
+// API Routes FIRST (important!)
 app.use("/api/auth", authRouter);
 
-// Export app for Vercel (no app.listen)
+// Root "/" redirect to frontend (only root, after API routes)
+app.get("/", (req, res) => {
+  res.redirect("https://afzaal-mern-1-43wc.vercel.app/");
+});
+
+// Export app for Vercel (do NOT use app.listen)
 export default app;
