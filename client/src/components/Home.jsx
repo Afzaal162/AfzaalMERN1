@@ -44,19 +44,7 @@ const Home = () => {
 
         {/* Hero Section */}
         <div className="hero-section">
-          {userEmail ? (
-            <div className="welcome-user">
-              <h1 className="hero-title" style={{ color: "green" }}>
-                {welcomeMessage} 🎉
-              </h1>
-              <p style={{ color: "white" }}>
-                You are now signed in as <strong>{userEmail}</strong>.
-              </p>
-              <button className="btn primary-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          ) : (
+     
             <>
               <h1 className="hero-title">
                 Welcome to <span className="gradient-text">Modern Auth</span>
@@ -66,7 +54,6 @@ const Home = () => {
                 Join thousands of users managing their accounts with ease.
               </p>
             </>
-          )}
         </div>
 
         {/* Features Grid */}

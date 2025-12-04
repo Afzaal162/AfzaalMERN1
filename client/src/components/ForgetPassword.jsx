@@ -1,8 +1,7 @@
-// src/components/ForgotPassword.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import './ForgetPassword.css';
+import api from "../api";
+import "./ForgetPassword.css";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -10,52 +9,32 @@ const ForgotPassword = () => {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
-    if (!email) return setMsg("Please enter your email");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
-    setMsg("");
-
     try {
-      const response = await axios.post(
-        "http://localhost:4000/api/auth/request-password-reset",
-        { email },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        setMsg("OTP sent! Check your email.");
-        // Redirect to OTP page for password reset
+      const res = await api.post("/api/auth/request-password-reset", { email });
+      if (res.data.success) {
         navigate("/reset-password-otp", { state: { email } });
       } else {
-        setMsg(response.data.message || "Failed to send OTP");
+        setMsg(res.data.message);
       }
     } catch (err) {
       console.log(err);
-      setMsg(err.response?.data?.message || "Server error");
+      setMsg("Request failed. Try again.");
     }
-
     setLoading(false);
   };
 
   return (
     <div className="forgot-container">
-      <div className="forgot-box">
+      <div className="forgot-card">
         <h1>Forgot Password</h1>
-        <p>Enter your email to reset your password</p>
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <button onClick={handleSubmit} disabled={loading}>
-          {loading ? "Please wait..." : "Send OTP"}
-        </button>
-
-        {msg && <p style={{ color: "red", marginTop: "10px" }}>{msg}</p>}
+        <form onSubmit={handleSubmit}>
+          <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <button type="submit" disabled={loading}>{loading ? "Please wait..." : "Send OTP"}</button>
+        </form>
+        {msg && <p style={{ color: "white" }}>{msg}</p>}
       </div>
     </div>
   );

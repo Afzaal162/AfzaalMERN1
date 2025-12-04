@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import './OTP.css';
+// import './OTP.css';
 
 const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email; // get email from navigation state
+  const email = location.state?.email;
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
-  // Timer countdown
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   useEffect(() => {
     if (timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
@@ -65,17 +66,14 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/auth/verify-otp",
+        `${API_URL}/api/auth/verify-otp`,
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
 
       if (response.data.success) {
-        // Save login info in localStorage
         localStorage.setItem("userEmail", email);
         localStorage.setItem("isLoggedIn", "true");
-
-        // ✅ Redirect to Welcome page instead of Home
         navigate("/welcome", { state: { email } });
       } else {
         alert(response.data.message);

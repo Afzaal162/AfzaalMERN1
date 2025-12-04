@@ -1,108 +1,48 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { FiLogIn } from "react-icons/fi";
-import './Login.css';
+import { useNavigate, Link } from "react-router-dom";
+import api from "../api";
+import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
-
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:4000/api/auth/login",
-        {
-          email: formData.email,
-          password: formData.password
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        // Save login info in localStorage
-        localStorage.setItem("userEmail", formData.email);
+      const res = await api.post("/api/auth/login", { email, password });
+      if (res.data.success) {
+        localStorage.setItem("userEmail", email);
         localStorage.setItem("isLoggedIn", "true");
-
-        // Redirect to Welcome or Home page
-        navigate("/welcome", { state: { email: formData.email } });
+        navigate("/welcome", { state: { email } });
       } else {
-        setMsg(response.data.message || "Login failed");
+        setMsg(res.data.message);
       }
     } catch (err) {
       console.log(err);
-      setMsg(err.response?.data?.message || "Server error. Try again.");
+      setMsg("Login failed. Try again.");
     }
 
     setLoading(false);
   };
 
-  const handleForgotPassword = () => {
-    navigate("/forgot-password"); // Redirect to forgot password page
-  };
-
   return (
     <div className="login-container">
       <div className="login-card">
-        <div className="login-icon">
-          <FiLogIn size={40} />
-        </div>
-        <h1 className="login-title">Login</h1>
-        <p className="login-subtitle">Sign in to your account</p>
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="input-group">
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="forgot-password" onClick={handleForgotPassword}>
-            Forgot password?
-          </div>
-
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "Please wait..." : "Login"}
-          </button>
+        <h1>Login</h1>
+        <form onSubmit={handleLogin} class="login-form">
+          <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Link to="/forgot-password">Forgot password?</Link>
+          <button className="login-btn" type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
         </form>
-
-        {msg && <p style={{ color: "red", textAlign: "center", marginTop: "10px" }}>{msg}</p>}
-
-        <div className="divider">OR</div>
-
-        <p className="login-footer">
-          Don't have an account? <a href="/register">Sign up</a>
-        </p>
+        {msg && <p style={{ color: "white" }}>{msg}</p>}
+        <div>Don't have an account? <Link to="/register">Register</Link></div>
       </div>
     </div>
   );

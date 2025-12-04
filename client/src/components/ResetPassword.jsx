@@ -1,57 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "../api"; // your axios instance
 import "./ResetPassword.css";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email; // Email from OTP verification
+  // Use email from state or fallback to localStorage
+  const email = location.state?.email || localStorage.getItem("resetEmail");
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
 
-  if (!email) {
-    return (
-      <div style={{ color: "white", textAlign: "center", fontSize: "20px" }}>
-        ❌ Email missing — go back and try again.
-      </div>
-    );
-  }
+  // Redirect if email missing
+  useEffect(() => {
+    if (!email) {
+      alert("Email missing. Redirecting to Forgot Password.");
+      navigate("/forgot-password");
+    }
+  }, [email, navigate]);
 
   const handleReset = async () => {
     if (!newPassword || !confirmPassword) {
-      alert("Please fill in both fields");
+      setMsg("Please fill in both fields");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("Passwords do not match");
+      setMsg("Passwords do not match");
       return;
     }
 
     setLoading(true);
-
     try {
-      const res = await axios.post(
-        "http://localhost:4000/api/auth/reset-password",
-        { email, newPassword }, // send only email and newPassword
-        { withCredentials: true }
-      );
-
+      const res = await api.post("/api/auth/reset-password", { email, newPassword });
       if (res.data.success) {
+        // Clear the stored email
+        localStorage.removeItem("resetEmail");
         alert("✅ Password reset successfully! Please login.");
         navigate("/login");
       } else {
-        alert(res.data.message);
+        setMsg(res.data.message);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Server Error");
+      console.log(err);
+      setMsg(err.response?.data?.message || "Server Error");
     }
-
     setLoading(false);
   };
+
+  if (!email) return null;
 
   return (
     <div className="reset-container">
@@ -71,6 +72,8 @@ const ResetPassword = () => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
+
+        {msg && <p style={{ color: "red", marginTop: "10px" }}>{msg}</p>}
 
         <button onClick={handleReset} disabled={loading}>
           {loading ? "Resetting..." : "Set New Password"}
