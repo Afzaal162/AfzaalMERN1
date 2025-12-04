@@ -13,7 +13,7 @@ const OTP = () => {
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
-  // Use env variable for API URL
+  // Environment variable for API URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
   useEffect(() => {
@@ -60,6 +60,7 @@ const OTP = () => {
     else inputsRef.current[5]?.focus();
   };
 
+  // Verify OTP
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
@@ -67,7 +68,7 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // remove trailing slash if exists
+        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // remove trailing slash
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
@@ -85,13 +86,24 @@ const OTP = () => {
     }
   };
 
-  const handleResend = () => {
+  // Resend OTP
+  const handleResend = async () => {
     if (!canResend) return;
-    setOtp(["", "", "", "", "", ""]);
-    setTimer(60);
-    setCanResend(false);
-    inputsRef.current[0]?.focus();
-    alert(`OTP resent to ${email}`);
+    try {
+      await axios.post(
+        `${API_URL.replace(/\/$/, "")}/auth/request-password-reset`, // or your resend OTP route
+        { email },
+        { withCredentials: true }
+      );
+      setOtp(["", "", "", "", "", ""]);
+      setTimer(60);
+      setCanResend(false);
+      inputsRef.current[0]?.focus();
+      alert(`OTP resent to ${email}`);
+    } catch (err) {
+      console.error("Resend OTP error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Failed to resend OTP");
+    }
   };
 
   const formatTime = (s) => {
