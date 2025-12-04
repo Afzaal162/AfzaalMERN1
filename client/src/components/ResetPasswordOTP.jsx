@@ -1,154 +1,168 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import "./OTP.css";
+// import './OTP.css';
 
-const ResetPasswordOTP = () => {
+const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
 
-  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [loading, setLoading] = useState(false);
   const inputsRef = useRef([]);
 
+  // Environment variable for API URL
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
-  // Redirect if email missing
   useEffect(() => {
-    if (!email) {
-      alert("Email missing. Redirecting...");
-      navigate("/forgot-password");
-    }
-  }, [email, navigate]);
-
-  // Countdown Timer
-  useEffect(() => {
-    if (timer <= 0) {
+    if (timer > 0) {
+      const countdown = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(countdown);
+    } else {
       setCanResend(true);
-      return;
     }
-    const timeout = setTimeout(() => setTimer(timer - 1), 1000);
-    return () => clearTimeout(timeout);
   }, [timer]);
 
-  const handleChange = (value, index) => {
-    if (!/^[0-9]?$/.test(value)) return;
+  const handleChange = (el, idx) => {
+    const value = el.value.replace(/[^0-9]/g, "");
+    if (!value) return;
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[idx] = value;
     setOtp(newOtp);
-    if (value && index < 5) inputsRef.current[index + 1]?.focus();
+    if (idx < 5) inputsRef.current[idx + 1]?.focus();
   };
 
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const newOtp = [...otp];
-      newOtp[index - 1] = "";
-      setOtp(newOtp);
-      inputsRef.current[index - 1]?.focus();
+  const handleKeyDown = (e, idx) => {
+    if (e.key === "Backspace") {
+      if (!otp[idx] && idx > 0) {
+        const newOtp = [...otp];
+        newOtp[idx - 1] = "";
+        setOtp(newOtp);
+        inputsRef.current[idx - 1]?.focus();
+      } else if (otp[idx]) {
+        const newOtp = [...otp];
+        newOtp[idx] = "";
+        setOtp(newOtp);
+      }
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const paste = e.clipboardData.getData("text").slice(0, 6);
-    if (!/^[0-9]+$/.test(paste)) return;
-    const newOtp = Array(6).fill("");
-    paste.split("").forEach((char, idx) => (newOtp[idx] = char));
+    const pasted = e.clipboardData.getData("text/plain").replace(/[^0-9]/g, "");
+    const newOtp = [...otp];
+    for (let i = 0; i < Math.min(pasted.length, 6); i++) newOtp[i] = pasted[i];
     setOtp(newOtp);
-    inputsRef.current[Math.min(paste.length - 1, 5)]?.focus();
+    const nextEmpty = newOtp.findIndex((v) => v === "");
+    if (nextEmpty !== -1) inputsRef.current[nextEmpty]?.focus();
+    else inputsRef.current[5]?.focus();
   };
 
-  const handleVerify = async () => {
+  // Verify OTP
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 6) {
-      alert("Please enter all 6 digits");
-      return;
-    }
+    if (enteredOtp.length !== 6) return alert("Please enter all 6 digits");
 
-    setLoading(true);
     try {
-      const res = await axios.post(
-        `${API_URL}/api/auth/verify-reset-otp`,
+      const response = await axios.post(
+        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // remove trailing slash
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
 
-      if (res.data.success) {
-        alert("OTP Verified Successfully!");
-        navigate("/reset-password", { state: { email } });
+      if (response.data.success) {
+        localStorage.setItem("userEmail", email);
+        localStorage.setItem("isLoggedIn", "true");
+        navigate("/welcome", { state: { email } });
       } else {
-        alert(res.data.message);
+        alert(response.data.message);
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Server Error");
+      console.error("OTP verify error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "OTP verification failed. Try again.");
     }
-    setLoading(false);
   };
 
+  // Resend OTP
   const handleResend = async () => {
     if (!canResend) return;
-
     try {
       await axios.post(
-        `${API_URL}/api/auth/request-password-reset`,
+        `${API_URL.replace(/\/$/, "")}/auth/request-password-reset`, // or your resend OTP route
         { email },
         { withCredentials: true }
       );
-
-      alert("A new OTP has been sent!");
-      setOtp(Array(6).fill(""));
+      setOtp(["", "", "", "", "", ""]);
       setTimer(60);
       setCanResend(false);
       inputsRef.current[0]?.focus();
+      alert(`OTP resent to ${email}`);
     } catch (err) {
-      alert("Failed to resend OTP");
+      console.error("Resend OTP error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Failed to resend OTP");
     }
   };
 
-  if (!email) return null;
+  const formatTime = (s) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  if (!email) {
+    return (
+      <div style={{ color: "white", textAlign: "center", marginTop: "50px" }}>
+        Email not found. Please register first.
+      </div>
+    );
+  }
 
   return (
     <div className="otp-container">
       <div className="otp-box">
-        <h1>Enter OTP</h1>
-        <p>
-          A 6-digit OTP has been sent to <strong>{email}</strong>
+        <h1>OTP Verification</h1>
+        <p className="otp-description">
+          We've sent a 6-digit code to<br />
+          <strong>{email}</strong>
         </p>
 
         <div className="otp-inputs" onPaste={handlePaste}>
-          {otp.map((num, index) => (
+          {otp.map((_, idx) => (
             <input
-              key={index}
+              key={idx}
               type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
-              value={num}
               maxLength="1"
-              ref={(el) => (inputsRef.current[index] = el)}
-              onChange={(e) => handleChange(e.target.value, index)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              aria-label={`OTP digit ${index + 1}`}
+              value={otp[idx]}
+              ref={(el) => (inputsRef.current[idx] = el)}
+              onChange={(e) => handleChange(e.target, idx)}
+              onKeyDown={(e) => handleKeyDown(e, idx)}
+              className={otp[idx] ? "filled" : ""}
             />
           ))}
         </div>
 
+        <button onClick={handleSubmit} className="verify-btn">Verify Code</button>
+
         <div className="otp-footer">
           {!canResend ? (
-            <p>Resend code in <b>{timer}s</b></p>
+            <p className="timer-text">
+              Resend code in <span className="timer">{formatTime(timer)}</span>
+            </p>
           ) : (
-            <button onClick={handleResend}>Resend OTP</button>
+            <button onClick={handleResend} className="resend-btn">Resend Code</button>
           )}
         </div>
 
-        <button onClick={handleVerify} disabled={loading} className="verify-btn">
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
+        <div className="help-text">
+          Didn't receive the code? Check your spam folder
+        </div>
       </div>
     </div>
   );
 };
 
-export default ResetPasswordOTP;
+export default OTP;
