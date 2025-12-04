@@ -47,7 +47,7 @@ const Home = () => {
      
             <>
               <h1 className="hero-title">
-                Welcome to <span className="gradient-text">Modern Auth</span>
+                Welcome to <span className="gradient-text">Modn Auth</span>
               </h1>
               <p className="hero-description">
                 Secure, fast, and seamless authentication experience.
