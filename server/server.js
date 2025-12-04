@@ -16,9 +16,14 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://mern-auth-frontend.vercel.app" // ✅ Add this
+  ],
   credentials: true,
 }));
+
 
 // Routes
 app.get("/", (req, res) => res.send("API IS WORKING"));
