@@ -1,28 +1,32 @@
+// ResetPasswordOTP.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import api from "../api";
+import api from "../api"; // axios instance
 import "./OTP.css";
 
 const ResetPasswordOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const emailFromState = location.state?.email;
 
-  // Use email from state or localStorage
-  const email = emailFromState || localStorage.getItem("resetEmail");
+  const email = location.state?.email;
+  if (!email) {
+    // If no email passed, redirect back to forgot password
+    alert("Email missing. Redirecting to Forgot Password page.");
+    navigate("/forgot-password");
+  }
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
+  // Countdown timer
   useEffect(() => {
-    if (!email) return;
     if (timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
       return () => clearTimeout(countdown);
     } else setCanResend(true);
-  }, [timer, email]);
+  }, [timer]);
 
   const handleChange = (el, idx) => {
     const value = el.value.replace(/[^0-9]/g, "");
@@ -62,18 +66,20 @@ const ResetPasswordOTP = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredOTP = otp.join("");
-    if (!email) return alert("Email not found!");
     if (enteredOTP.length !== 6) return alert("Please enter all 6 digits");
 
     try {
       const res = await api.post("/api/auth/verify-reset-otp", { email, otp: enteredOTP });
+      console.log("OTP verification response:", res.data);
+
       if (res.data.success) {
-        // Save email to localStorage for persistence
-        localStorage.setItem("resetEmail", email);
+        // Navigate to Reset Password page with email
         navigate("/reset-password", { state: { email } });
-      } else alert(res.data.message);
+      } else {
+        alert(res.data.message);
+      }
     } catch (err) {
-      console.error("OTP verify error:", err.response?.data || err.message);
+      console.error("Reset OTP error:", err.response?.data || err.message);
       alert(err.response?.data?.message || "OTP verification failed. Try again.");
     }
   };
@@ -93,12 +99,12 @@ const ResetPasswordOTP = () => {
     }
   };
 
-  if (!email) return <div style={{ color: "white", marginTop: "50px", textAlign: "center" }}>Email not found.</div>;
+  if (!email) return null;
 
   return (
     <div className="otp-container">
       <div className="otp-box">
-        <h1>OTP Verification</h1>
+        <h1>Reset Password OTP</h1>
         <p>We've sent a 6-digit code to <strong>{email}</strong></p>
         <div className="otp-inputs" onPaste={handlePaste}>
           {otp.map((_, idx) => (
