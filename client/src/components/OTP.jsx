@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+// src/components/RegistrationOTP.jsx
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import api from "../api";
 import "./OTP.css";
 
 const OTP = () => {
@@ -9,72 +10,65 @@ const OTP = () => {
   const email = location.state?.email;
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const inputsRef = useRef([]);
+  const [msg, setMsg] = useState("");
 
-  // Auto focus next input
   const handleChange = (value, index) => {
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); 
-    setOtp(newOtp);
-
-    if (value.length === 1 && index < 5) {
-      inputsRef.current[index + 1].focus();
+    if (/^\d$/.test(value) || value === "") {
+      const updated = [...otp];
+      updated[index] = value;
+      setOtp(updated);
     }
   };
 
-  // Backspace auto move left
-  const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputsRef.current[index - 1].focus();
-    }
-  };
-
-  const handleSubmit = async () => {
-    const finalOTP = otp.join("");
-    console.log("Sending:", { email, otp: finalOTP });
+  const handleVerify = async () => {
+    const enteredOTP = otp.join("");
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/verify-otp`,
-        { email, otp: finalOTP },
-        { withCredentials: true }
-      );
-
-      console.log("OTP Verify Success:", res.data);
+      const res = await api.post("/api/auth/verify-otp", {
+        email,
+        otp: enteredOTP,
+      });
 
       if (res.data.success) {
-        navigate("/reset-password", { state: { email } });
+        navigate("/success", {
+          state: {
+            message: "Account successfully verified!",
+            redirectText: "Go to Login",
+            redirectLink: "/login",
+          },
+        });
       } else {
-        alert(res.data.message);
+        setMsg(res.data.message);
       }
-    } catch (error) {
-      console.error("OTP verify error:", error.response?.data || error);
-
-      alert(
-        error.response?.data?.message ||
-          "Something went wrong while verifying OTP"
-      );
+    } catch (err) {
+      console.log(err);
+      setMsg("OTP verification failed");
     }
   };
 
   return (
     <div className="otp-container">
-      <h2>Enter OTP</h2>
+      <h2>Verify Your Email</h2>
+      <p>We've sent a 6-digit OTP to {email}</p>
 
-      <div className="otp-inputs">
-        {otp.map((value, index) => (
+      <div className="otp-box">
+        {otp.map((digit, index) => (
           <input
             key={index}
-            ref={(el) => (inputsRef.current[index] = el)}
+            type="text"
             maxLength="1"
-            value={value}
+            value={digit}
             onChange={(e) => handleChange(e.target.value, index)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
+            className="otp-input"
           />
         ))}
       </div>
 
-      <button onClick={handleSubmit}>Verify OTP</button>
+      {msg && <p className="error">{msg}</p>}
+
+      <button className="otp-btn" onClick={handleVerify}>
+        Verify OTP
+      </button>
     </div>
   );
 };
