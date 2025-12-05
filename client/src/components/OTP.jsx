@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import "./OTP.css"
+import "./OTP.css";
 
 const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email;
 
-  // ✅ CRA env variable
+  const email = location.state?.email;
+  const flowType = location.state?.flowType || "register"; 
+  // 👆 NEW: register OR forgot
+
   const API_URL = process.env.REACT_APP_API_URL.replace(/\/$/, "");
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -16,7 +18,7 @@ const OTP = () => {
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
-  // Countdown timer
+  // ⏳ Countdown timer
   useEffect(() => {
     if (timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
@@ -29,9 +31,11 @@ const OTP = () => {
   const handleChange = (el, idx) => {
     const value = el.value.replace(/[^0-9]/g, "");
     if (!value) return;
+
     const newOtp = [...otp];
     newOtp[idx] = value;
     setOtp(newOtp);
+
     if (idx < 5) inputsRef.current[idx + 1]?.focus();
   };
 
@@ -54,30 +58,41 @@ const OTP = () => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text/plain").replace(/[^0-9]/g, "");
     const newOtp = [...otp];
-    for (let i = 0; i < Math.min(pasted.length, 6); i++) newOtp[i] = pasted[i];
+
+    for (let i = 0; i < Math.min(pasted.length, 6); i++) {
+      newOtp[i] = pasted[i];
+    }
+
     setOtp(newOtp);
     const nextEmpty = newOtp.findIndex((v) => v === "");
     if (nextEmpty !== -1) inputsRef.current[nextEmpty]?.focus();
     else inputsRef.current[5]?.focus();
   };
 
-  // ✅ Submit OTP
+  // ✅ OTP Submission (updated with flowType logic)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 6) return alert("Please enter all 6 digits");
+
+    if (enteredOtp.length !== 6) {
+      return alert("Please enter all 6 digits");
+    }
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/verify-otp`, // ✅ include /api/auth
+        `${API_URL}/api/auth/verify-otp`,
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
 
       if (response.data.success) {
-        localStorage.setItem("userEmail", email);
-        localStorage.setItem("isLoggedIn", "true");
-        navigate("/welcome", { state: { email } });
+        // 🎯 NEW: Redirect based on flow type
+        if (flowType === "register") {
+          navigate("/welcome", { state: { email } }); // success page
+        } else if (flowType === "forgot") {
+          navigate("/reset-password", { state: { email } }); // password reset
+        }
       } else {
         alert(response.data.message);
       }
@@ -87,19 +102,27 @@ const OTP = () => {
     }
   };
 
-  // ✅ Resend OTP
+  // 🔄 Resend OTP
   const handleResend = async () => {
     if (!canResend) return;
+
     try {
+      const endpoint =
+        flowType === "register"
+          ? `${API_URL}/api/auth/resend-otp` // registration resend
+          : `${API_URL}/api/auth/request-password-reset`; // forgot password resend
+
       await axios.post(
-        `${API_URL}/api/auth/request-password-reset`,
+        endpoint,
         { email },
         { withCredentials: true }
       );
+
       setOtp(["", "", "", "", "", ""]);
       setTimer(60);
       setCanResend(false);
       inputsRef.current[0]?.focus();
+
       alert(`OTP resent to ${email}`);
     } catch (err) {
       console.error("Resend OTP error:", err.response?.data || err.message);
@@ -146,7 +169,9 @@ const OTP = () => {
           ))}
         </div>
 
-        <button onClick={handleSubmit} className="verify-btn">Verify Code</button>
+        <button onClick={handleSubmit} className="verify-btn">
+          Verify Code
+        </button>
 
         <div className="otp-footer">
           {!canResend ? (
@@ -154,13 +179,13 @@ const OTP = () => {
               Resend code in <span className="timer">{formatTime(timer)}</span>
             </p>
           ) : (
-            <button onClick={handleResend} className="resend-btn">Resend Code</button>
+            <button onClick={handleResend} className="resend-btn">
+              Resend Code
+            </button>
           )}
         </div>
 
-        <div className="help-text">
-          Didn't receive the code? Check your spam folder
-        </div>
+        <div className="help-text">Didn't receive the code? Check your spam folder</div>
       </div>
     </div>
   );
