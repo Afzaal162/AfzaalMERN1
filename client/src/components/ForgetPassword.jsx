@@ -12,17 +12,24 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       const res = await api.post("/api/auth/request-password-reset", { email });
+
       if (res.data.success) {
-        navigate("/reset-password-otp", { state: { email } });
+        // ✅ IMPORTANT
+        navigate("/verify-otp", { 
+          state: { email, flowType: "forgot" }
+        });
       } else {
         setMsg(res.data.message);
       }
+
     } catch (err) {
       console.log(err);
       setMsg("Request failed. Try again.");
     }
+
     setLoading(false);
   };
 
@@ -31,9 +38,19 @@ const ForgotPassword = () => {
       <div className="forgot-card">
         <h1>Forgot Password</h1>
         <form onSubmit={handleSubmit}>
-          <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <button type="submit" disabled={loading}>{loading ? "Please wait..." : "Send OTP"}</button>
+          <input 
+            type="email" 
+            placeholder="Enter your email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Please wait..." : "Send OTP"}
+          </button>
         </form>
+
         {msg && <p style={{ color: "white" }}>{msg}</p>}
       </div>
     </div>
