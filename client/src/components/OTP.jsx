@@ -1,20 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import "./OTP.css"
 
 const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
 
-  // ✅ Use environment variable for backend URL
-const API_URL = process.env.REACT_APP_API_URL;
+  // ✅ CRA env variable
+  const API_URL = process.env.REACT_APP_API_URL.replace(/\/$/, "");
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const inputsRef = useRef([]);
 
+  // Countdown timer
   useEffect(() => {
     if (timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
@@ -59,6 +61,7 @@ const API_URL = process.env.REACT_APP_API_URL;
     else inputsRef.current[5]?.focus();
   };
 
+  // ✅ Submit OTP
   const handleSubmit = async (e) => {
     e.preventDefault();
     const enteredOtp = otp.join("");
@@ -66,7 +69,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 
     try {
       const response = await axios.post(
-        `${API_URL}/auth/verify-otp`,
+        `${API_URL}/api/auth/verify-otp`, // ✅ include /api/auth
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
@@ -84,11 +87,12 @@ const API_URL = process.env.REACT_APP_API_URL;
     }
   };
 
+  // ✅ Resend OTP
   const handleResend = async () => {
     if (!canResend) return;
     try {
       await axios.post(
-        `${API_URL}/auth/request-password-reset`,
+        `${API_URL}/api/auth/request-password-reset`,
         { email },
         { withCredentials: true }
       );
