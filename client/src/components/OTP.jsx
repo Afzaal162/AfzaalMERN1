@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from "./config"; // ✅ Use config.js for backend URL
-// import './OTP.css';
 
 const OTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+
+  // ✅ Use environment variable for backend URL
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
@@ -65,7 +66,7 @@ const OTP = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL.replace(/\/$/, "")}/auth/verify-otp`, // ✅ Use config.js API_URL
+        `${API_URL}/auth/verify-otp`,
         { email, otp: enteredOtp },
         { withCredentials: true }
       );
@@ -87,7 +88,7 @@ const OTP = () => {
     if (!canResend) return;
     try {
       await axios.post(
-        `${API_URL.replace(/\/$/, "")}/auth/request-password-reset`, // or your resend OTP route
+        `${API_URL}/auth/request-password-reset`,
         { email },
         { withCredentials: true }
       );
