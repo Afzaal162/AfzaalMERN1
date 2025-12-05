@@ -6,7 +6,10 @@ import "./OTP.css";
 const ResetPasswordOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email;
+  const emailFromState = location.state?.email;
+
+  // Use email from state or localStorage
+  const email = emailFromState || localStorage.getItem("resetEmail");
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
@@ -14,11 +17,12 @@ const ResetPasswordOTP = () => {
   const inputsRef = useRef([]);
 
   useEffect(() => {
+    if (!email) return;
     if (timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
       return () => clearTimeout(countdown);
     } else setCanResend(true);
-  }, [timer]);
+  }, [timer, email]);
 
   const handleChange = (el, idx) => {
     const value = el.value.replace(/[^0-9]/g, "");
@@ -64,6 +68,8 @@ const ResetPasswordOTP = () => {
     try {
       const res = await api.post("/api/auth/verify-reset-otp", { email, otp: enteredOTP });
       if (res.data.success) {
+        // Save email to localStorage for persistence
+        localStorage.setItem("resetEmail", email);
         navigate("/reset-password", { state: { email } });
       } else alert(res.data.message);
     } catch (err) {
