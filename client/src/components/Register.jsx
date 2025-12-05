@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api"; // use centralized axios instance
+import api from "../api";
 import './Register.css'
+
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ fullName: "", email: "", password: "" });
@@ -25,7 +26,12 @@ const Register = () => {
 
       if (response.data.success) {
         setMsg("Verification email sent!");
-        navigate("/verify-otp", { state: { email: formData.email } });
+
+        // ✅ IMPORTANT — include flowType for register
+        navigate("/verify-otp", { 
+          state: { email: formData.email, flowType: "register" }
+        });
+
       } else {
         setMsg(response.data.message);
       }
@@ -46,11 +52,19 @@ const Register = () => {
             <input className="input" type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} required />
             <input className="input" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
             <input className="input" type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+
             <Link to="/forgot-password">Forgot password?</Link>
-            <button className="submit-btn" type="submit" disabled={loading}>{loading ? "Please wait..." : "Sign Up"}</button>
+
+            <button className="submit-btn" type="submit" disabled={loading}>
+              {loading ? "Please wait..." : "Sign Up"}
+            </button>
           </form>
+
           {msg && <p style={{ color: "white" }}>{msg}</p>}
-          <div>Already have an account? <Link to="/login">Login</Link></div>
+
+          <div>
+            Already have an account? <Link to="/login">Login</Link>
+          </div>
         </div>
       </div>
     </div>
