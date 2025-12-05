@@ -1,101 +1,110 @@
-// ResetPasswordOTP.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import api from "../api"; // axios instance
+import axios from "axios";
 import "./OTP.css";
 
 const ResetPasswordOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const email = location.state?.email;
-  if (!email) {
-    // If no email passed, redirect back to forgot password
-    alert("Email missing. Redirecting to Forgot Password page.");
-    navigate("/forgot-password");
-  }
 
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(Array(6).fill(""));
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputsRef = useRef([]);
 
-  // Countdown timer
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
+  // Redirect if email missing
   useEffect(() => {
-    if (timer > 0) {
-      const countdown = setTimeout(() => setTimer(timer - 1), 1000);
-      return () => clearTimeout(countdown);
-    } else setCanResend(true);
+    if (!email) {
+      alert("Email missing. Redirecting...");
+      navigate("/forgot-password");
+    }
+  }, [email, navigate]);
+
+  // Countdown Timer
+  useEffect(() => {
+    if (timer <= 0) {
+      setCanResend(true);
+      return;
+    }
+    const timeout = setTimeout(() => setTimer(timer - 1), 1000);
+    return () => clearTimeout(timeout);
   }, [timer]);
 
-  const handleChange = (el, idx) => {
-    const value = el.value.replace(/[^0-9]/g, "");
-    if (!value) return;
+  const handleChange = (value, index) => {
+    if (!/^[0-9]?$/.test(value)) return;
     const newOtp = [...otp];
-    newOtp[idx] = value;
+    newOtp[index] = value;
     setOtp(newOtp);
-    if (idx < 5) inputsRef.current[idx + 1]?.focus();
+    if (value && index < 5) inputsRef.current[index + 1]?.focus();
   };
 
-  const handleKeyDown = (e, idx) => {
-    if (e.key === "Backspace") {
-      if (!otp[idx] && idx > 0) {
-        const newOtp = [...otp];
-        newOtp[idx - 1] = "";
-        setOtp(newOtp);
-        inputsRef.current[idx - 1]?.focus();
-      } else if (otp[idx]) {
-        const newOtp = [...otp];
-        newOtp[idx] = "";
-        setOtp(newOtp);
-      }
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const newOtp = [...otp];
+      newOtp[index - 1] = "";
+      setOtp(newOtp);
+      inputsRef.current[index - 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text/plain").replace(/[^0-9]/g, "");
-    const newOtp = [...otp];
-    for (let i = 0; i < Math.min(pasted.length, 6); i++) newOtp[i] = pasted[i];
+    const paste = e.clipboardData.getData("text").slice(0, 6);
+    if (!/^[0-9]+$/.test(paste)) return;
+    const newOtp = Array(6).fill("");
+    paste.split("").forEach((char, idx) => (newOtp[idx] = char));
     setOtp(newOtp);
-    const nextEmpty = newOtp.findIndex(v => v === "");
-    if (nextEmpty !== -1) inputsRef.current[nextEmpty]?.focus();
-    else inputsRef.current[5]?.focus();
+    inputsRef.current[Math.min(paste.length - 1, 5)]?.focus();
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const enteredOTP = otp.join("");
-    if (enteredOTP.length !== 6) return alert("Please enter all 6 digits");
+  const handleVerify = async () => {
+    const enteredOtp = otp.join("");
+    if (enteredOtp.length !== 6) {
+      alert("Please enter all 6 digits");
+      return;
+    }
 
+    setLoading(true);
     try {
-      const res = await api.post("/api/auth/verify-reset-otp", { email, otp: enteredOTP });
-      console.log("OTP verification response:", res.data);
+      const res = await axios.post(
+        `${API_URL}/api/auth/verify-reset-otp`,
+        { email, otp: enteredOtp },
+        { withCredentials: true }
+      );
 
       if (res.data.success) {
-        // Navigate to Reset Password page with email
+        alert("OTP Verified Successfully!");
         navigate("/reset-password", { state: { email } });
       } else {
         alert(res.data.message);
       }
     } catch (err) {
-      console.error("Reset OTP error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "OTP verification failed. Try again.");
+      alert(err.response?.data?.message || "Server Error");
     }
+    setLoading(false);
   };
 
   const handleResend = async () => {
     if (!canResend) return;
+
     try {
-      await api.post("/api/auth/request-password-reset", { email });
-      setOtp(["", "", "", "", "", ""]);
+      await axios.post(
+        `${API_URL}/api/auth/request-password-reset`,
+        { email },
+        { withCredentials: true }
+      );
+
+      alert("A new OTP has been sent!");
+      setOtp(Array(6).fill(""));
       setTimer(60);
       setCanResend(false);
       inputsRef.current[0]?.focus();
-      alert(`OTP resent to ${email}`);
     } catch (err) {
-      console.error("Resend OTP error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to resend OTP");
+      alert("Failed to resend OTP");
     }
   };
 
@@ -104,29 +113,39 @@ const ResetPasswordOTP = () => {
   return (
     <div className="otp-container">
       <div className="otp-box">
-        <h1>Reset Password OTP</h1>
-        <p>We've sent a 6-digit code to <strong>{email}</strong></p>
+        <h1>Enter OTP</h1>
+        <p>
+          A 6-digit OTP has been sent to <strong>{email}</strong>
+        </p>
+
         <div className="otp-inputs" onPaste={handlePaste}>
-          {otp.map((_, idx) => (
+          {otp.map((num, index) => (
             <input
-              key={idx}
+              key={index}
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
+              value={num}
               maxLength="1"
-              value={otp[idx]}
-              ref={el => inputsRef.current[idx] = el}
-              onChange={e => handleChange(e.target, idx)}
-              onKeyDown={e => handleKeyDown(e, idx)}
-              className={otp[idx] ? "filled" : ""}
+              ref={(el) => (inputsRef.current[index] = el)}
+              onChange={(e) => handleChange(e.target.value, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              aria-label={`OTP digit ${index + 1}`}
             />
           ))}
         </div>
-        <button onClick={handleSubmit}>Verify OTP</button>
-        {!canResend ? (
-          <p>Resend code in {timer}s</p>
-        ) : (
-          <button onClick={handleResend}>Resend OTP</button>
-        )}
+
+        <div className="otp-footer">
+          {!canResend ? (
+            <p>Resend code in <b>{timer}s</b></p>
+          ) : (
+            <button onClick={handleResend}>Resend OTP</button>
+          )}
+        </div>
+
+        <button onClick={handleVerify} disabled={loading} className="verify-btn">
+          {loading ? "Verifying..." : "Verify OTP"}
+        </button>
       </div>
     </div>
   );
