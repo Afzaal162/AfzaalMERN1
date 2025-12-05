@@ -6,10 +6,9 @@ import Layout from "./components/Layout";
 import Home from "./components/Home";
 import Register from "./components/Register";
 import Login from "./components/Login";
-import OTP from "./components/OTP";
+import OTP from "./components/OTP"; // ✅ Use existing OTP component
 import ForgotPassword from "./components/ForgetPassword";
 import ResetPassword from "./components/ResetPassword";
-import ResetPasswordOTP from "./components/ResetPasswordOTP"; // ✅ IMPORTANT
 import Success from "./components/Success";
 import Welcome from "./components/Welcome";
 
@@ -27,8 +26,8 @@ const App = () => {
         {/* Password Reset Flow */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* ✅ ADD THIS ROUTE — OTP for Password Reset */}
-        <Route path="/reset-password-otp" element={<ResetPasswordOTP />} />
+        {/* OTP for Password Reset */}
+        <Route path="/reset-password-otp" element={<OTP />} />
 
         <Route path="/reset-password" element={<ResetPassword />} />
 
